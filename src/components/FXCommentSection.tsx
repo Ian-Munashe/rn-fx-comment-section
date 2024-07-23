@@ -1,91 +1,151 @@
 import React from "react";
-// import { FlyingObject } from "@/fly-object";
 import { LinearGradient } from "expo-linear-gradient";
-import { FlatList } from "react-native-gesture-handler";
-import { View, Text, StyleSheet, TextInput } from "react-native";
+// import { FlatList } from "react-native-gesture-handler";
+import {
+  View,
+  Text,
+  StyleSheet,
+  Pressable,
+  Keyboard,
+  FlatList,
+} from "react-native";
 
-import type { ICommentSection } from "../types";
-import { useCSStore } from "../stores/csStore";
-import DeleteComment from "./DeleteComment";
-import { CommentCard } from "./cards";
 import Utils from "../utils";
-import ReactionToolBar from "./ReactionToolBar";
-import EmojiTextInput from "./EmojiTextInput";
+import { CommentCard } from "./cards";
+import { CSContext } from "../context";
+import CommentInput from "./CommentInput";
+import { useCommentSection } from "../hooks";
+import { DeleteComment } from "./DeleteComment";
+import type { IComment, ICommentSection } from "../types";
 
+const data: IComment[] = [
+  {
+    likes: 5,
+    liked: true,
+    date: new Date(),
+    replies: 1,
+    id: "string1",
+    author: {
+      name: "Auther Name",
+      avatar: "https://i.pravatar.cc/422",
+      authorId: "autherID",
+    },
+    body: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis dicta explicabo saepe.",
+    type: "text",
+  },
+  {
+    likes: 0,
+    liked: false,
+    date: new Date(),
+    replies: 0,
+    id: "string2",
+    author: {
+      name: "Auther",
+      avatar: "https://i.pravatar.cc/423",
+      authorId: "autherID",
+    },
+    body: "Lorem ipsum dolor sit amet consectetur adipisicing elit. Debitis dicta explicabo saepe.",
+    type: "text",
+  },
+];
 
-
-const FXCommentSection:React.FC<ICommentSection> =({
+const FXCommentSection: React.FC<ICommentSection> = ({
   colors = {
     backgroundColor: "#0f0f0f",
     tint: "#fff",
     primary: "#0071d9",
     caption: "#727272",
   },
-  comments,
-  reactionToolBar = false,
-  onSendComment,
-  onCommentLike,
-  ...rest
-}: ICommentSection)=> {
-  const textInputRef = React.useRef<TextInput>(null);
-  const selectedComment = useCSStore((state) => state.selectedComment);
-  const focused = useCSStore((state) => state.focused);
+  ...props
+}: ICommentSection) => {
+  const { reply, textInputRef, setReply } = useCommentSection();
+  const [comments, setComments] = React.useState<IComment[]>(data);
+  const [comment, setComment] = React.useState<IComment | null>(null);
 
   React.useEffect(() => {
-    focused ? textInputRef.current?.focus() : textInputRef.current?.blur();
-  }, [focused]);
+    if (reply) textInputRef.current?.focus();
+  }, [reply]);
+
+  const handleSendComment = (value: string) => {
+    const comment: IComment = {
+      body: value,
+      author: {
+        name: "John Doe",
+        avatar: null,
+        authorId: new Date().toString(),
+      },
+      date: new Date(),
+      id: new Date().toString(),
+      liked: false,
+      likes: 0,
+      replies: 0,
+      type: "text",
+    };
+    setComments([...comments, comment]);
+  };
+
+  const handleTouchOutside = () => {
+    setComment(null);
+    Keyboard.dismiss();
+  };
 
   return (
-    <View style={{ flex: 1, backgroundColor: colors.backgroundColor }}>
-      {selectedComment && <DeleteComment colors={colors} />}
-      <View
-        style={[
-          comments.length == 0 && styles.noCommentsContainer,
-          { flex: 1, position: "relative", overflow: "hidden" },
-        ]}
-      >
-        {comments.length == 0 ? (
-          <Text style={{ fontSize: 13, color: colors.caption }}>
-            No comments
-          </Text>
-        ) : (
-          <>
-            <FlatList
-              {...rest}
-              keyboardShouldPersistTaps="handled"
-              data={comments}
-              renderItem={({ item }) => (
-                <CommentCard
-                  colors={colors}
-                  comment={item}
-                  onCommentLike={onCommentLike}
+    <Pressable
+      onPress={handleTouchOutside}
+      style={{ flex: 1, backgroundColor: colors.backgroundColor }}
+    >
+      <CSContext.Provider value={{ reply, comment, setReply, setComment }}>
+        <DeleteComment
+          colors={colors}
+          onDeleteComment={(id: string) => console.log(id)}
+        />
+        <View
+          style={[
+            comments.length == 0 && styles.noCommentsContainer,
+            { flex: 1, position: "relative", overflow: "hidden" },
+          ]}
+        >
+          {comments.length == 0 ? (
+            <Text style={{ fontSize: 13, color: colors.caption }}>
+              No comments
+            </Text>
+          ) : (
+            <>
+              <FlatList
+                keyboardShouldPersistTaps="handled"
+                data={comments}
+                renderItem={({ item }) => (
+                  <CommentCard
+                    colors={colors}
+                    comment={item}
+                    onCommentLike={() => {}}
+                  />
+                )}
+              />
+              {comment ? null : (
+                <LinearGradient
+                  style={[styles.linearGradient, { zIndex: 4 }]}
+                  colors={[
+                    colors.backgroundColor,
+                    Utils.hexToRGBA(colors.backgroundColor, 0.7),
+                    "transparent",
+                  ]}
                 />
               )}
-            />
-            <LinearGradient
-              style={[styles.linearGradient, { zIndex: 4 }]}
-              colors={[
-                colors.backgroundColor,
-                Utils.hexToRGBA(colors.backgroundColor, 0.7),
-                "transparent",
-              ]}
-            />
-            {/* <FlyingObject /> */}
-          </>
+            </>
+          )}
+        </View>
+        {props.footer ?? (
+          <CommentInput
+            ref={textInputRef}
+            colors={colors}
+            onSendComment={handleSendComment}
+          />
         )}
-      </View>
-      {reactionToolBar && !focused ? (
-        <ReactionToolBar colors={colors} />
-      ) : (
-        <EmojiTextInput
-          ref={textInputRef}
-          colors={colors}
-          onSendComment={onSendComment}
-        />
-      )}
-    </View>
+      </CSContext.Provider>
+    </Pressable>
   );
-}
+};
 
 const styles = StyleSheet.create({
   headerContainer: {
@@ -105,4 +165,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default FXCommentSection
+export default FXCommentSection;

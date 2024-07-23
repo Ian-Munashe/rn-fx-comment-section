@@ -7,8 +7,6 @@ import {
   View,
 } from "react-native";
 import LottieView from "lottie-react-native";
-// import { useCSStore } from "../stores/csStore";
-// import { useAnimation } from "@/fly-object";
 import {
   HeartFace,
   RedHeart,
@@ -17,8 +15,7 @@ import {
   ThumbsUp,
   PartyingFace,
   ZanyFace,
-} from "../lottie";
-import type { IColors } from "../types";
+} from "../assets/lottie";
 
 const reactions = [
   HeartFace,
@@ -30,7 +27,7 @@ const reactions = [
   ZanyFace,
 ];
 
-export default function ReactionToolBar({ colors }: { colors: IColors }) {
+export default function ReactionToolBar({ colors }: { colors: any }) {
   const handleReactions = (reaction: any) => {
     const animation = (
       <LottieView

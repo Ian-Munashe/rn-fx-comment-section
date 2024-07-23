@@ -1,11 +1,11 @@
 import type { IColors } from "./colors";
-import type { IComment } from "./comment";
+// import type { IComment } from "./comment";
 
 export interface ICommentSection {
-  comments: IComment[];
+  // comments: IComment[];
   colors?: IColors;
-  backgroundColor?: string;
-  reactionToolBar?: boolean;
-  onSendComment: (data: any) => void;
-  onCommentLike: (id: string) => void;
+  // backgroundColor?: string;
+  footer?: React.ReactElement;
+  // onSendComment: (data: any) => void;
+  // onCommentLike: (id: string) => void;
 }

@@ -7,21 +7,22 @@ import {
   StyleSheet,
 } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
-import { useCSStore } from "../stores/csStore";
-import ReplyComponent from "./ReplyComponent";
-import type { IEmojiTextInput } from "../types";
+
 import Avatar from "./Avatar";
+import { CSContext } from "../context";
+import ReplyComponent from "./ReplyComponent";
+import type { ICommentInputProps } from "../types";
 
 type Ref = TextInput;
 const emojis: string[] = ["❤️", "🙏", "🔥", "👏", "😢", "😍", "😮", "😂"];
 
-const EmojiTextInput = React.forwardRef<Ref, IEmojiTextInput>((props, ref) => {
-  const reply = useCSStore((state) => state.reply);
-  const comment = useCSStore((state) => state.comment);
+const CommentInput = React.forwardRef<Ref, ICommentInputProps>((props, ref) => {
+  const context = React.useContext(CSContext);
+  const [comment, setComment] = React.useState<string>("");
 
   const onSendComment = () => {
-    useCSStore.setState({ comment: "" });
-    useCSStore.setState({ focused: false });
+    setComment("");
+    context?.setReply(null);
     props.onSendComment(comment);
   };
 
@@ -31,7 +32,7 @@ const EmojiTextInput = React.forwardRef<Ref, IEmojiTextInput>((props, ref) => {
 
   return (
     <>
-      {reply && <ReplyComponent reply={reply} props={props} />}
+      <ReplyComponent reply={context?.reply} theme={props.colors} />
       <View
         style={{ backgroundColor: props.colors.backgroundColor, zIndex: 3 }}
       >
@@ -39,7 +40,7 @@ const EmojiTextInput = React.forwardRef<Ref, IEmojiTextInput>((props, ref) => {
           {emojis.map((emoji: string, idx: number) => (
             <TouchableOpacity
               key={idx}
-              onPress={() => useCSStore.setState({ comment: comment + emoji })}
+              onPress={() => setComment(comment + emoji)}
               style={styles.emojiContainer}
             >
               <Text style={{ fontSize: 24 }}>{emoji}</Text>
@@ -51,16 +52,11 @@ const EmojiTextInput = React.forwardRef<Ref, IEmojiTextInput>((props, ref) => {
           <TextInput
             ref={ref}
             value={comment}
-            onBlur={() => {
-              useCSStore.setState({ focused: false });
-              useCSStore.setState({ reply: null });
-            }}
             placeholder="Add a comment..."
-            placeholderTextColor={props.colors.caption}
             cursorColor={props.colors.primary}
-            onChangeText={(value) =>
-              useCSStore.setState({ comment: value.trim() })
-            }
+            onBlur={() => context?.setReply(null)}
+            placeholderTextColor={props.colors.caption}
+            onChangeText={(value) => setComment(value.trim())}
             style={{ flex: 1, color: props.colors.tint, marginHorizontal: 8 }}
           />
           <TouchableOpacity
@@ -99,4 +95,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmojiTextInput;
+export default CommentInput;

@@ -1,13 +1,19 @@
+import React from "react";
 import moment from "moment";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Pressable,
+} from "react-native";
 
-
-import type { IColors, IComment } from "../../types";
-import LikeButton from "../LikeButton";
-import Utils from "../../utils";
 import Avatar from "../Avatar";
+import Utils from "../../utils";
+import LikeButton from "../LikeButton";
 import CommentReply from "./CommentReply";
-import { useCSStore } from "../../stores/csStore";
+import { CSContext } from "../../context";
+import type { IColors, IComment } from "../../types";
 
 interface Props {
   colors: IColors;
@@ -16,10 +22,19 @@ interface Props {
 }
 
 export default function CommentCard({ colors, comment, onCommentLike }: Props) {
+  const context = React.useContext(CSContext);
   const replies: any = [...Array(0)];
 
   return (
-    <View style={styles.container}>
+    <Pressable
+      onLongPress={() => context?.setComment(comment)}
+      style={[
+        styles.container,
+        context?.comment &&
+          comment.id === context.comment.id &&
+          styles.activeContainer,
+      ]}
+    >
       <Avatar uri={comment.author.avatar} radius={35} />
       <View style={{ flex: 1, marginLeft: 12 }}>
         <View style={{ flexDirection: "row" }}>
@@ -38,11 +53,7 @@ export default function CommentCard({ colors, comment, onCommentLike }: Props) {
               {comment.body}
             </Text>
             <View style={{ flexDirection: "row", marginTop: 4 }}>
-              <TouchableOpacity
-                onPress={async () => {
-                  useCSStore.setState({ reply: comment, focused: true });
-                }}
-              >
+              <TouchableOpacity onPress={() => context?.setReply(comment)}>
                 <Text style={{ fontSize: 12, color: colors.caption }}>
                   Reply
                 </Text>
@@ -73,7 +84,7 @@ export default function CommentCard({ colors, comment, onCommentLike }: Props) {
             onCommentLike={() => onCommentLike(comment.id)}
           />
         </View>
-        {replies.map((reply: any, idx: number) => (
+        {replies.map((_: IComment, idx: number) => (
           <CommentReply
             key={idx}
             colors={colors}
@@ -83,7 +94,7 @@ export default function CommentCard({ colors, comment, onCommentLike }: Props) {
           />
         ))}
       </View>
-    </View>
+    </Pressable>
   );
 }
 
@@ -94,6 +105,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 12,
   },
+  activeContainer: { backgroundColor: "rgb(10, 10, 10)" },
   repliesCountContainer: {
     flexDirection: "row",
     alignItems: "center",

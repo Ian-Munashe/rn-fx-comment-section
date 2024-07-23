@@ -1,6 +1,6 @@
 import type { IColors } from "./colors";
 
-export interface IEmojiTextInput {
+export interface ICommentInputProps {
   colors: IColors;
-  onSendComment: (data: any) => void;
+  onSendComment: (comment: string) => void;
 }
